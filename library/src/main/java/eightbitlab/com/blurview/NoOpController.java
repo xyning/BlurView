@@ -20,6 +20,11 @@ class NoOpController implements BlurController {
     }
 
     @Override
+    public BlurViewFacade setSaturation(float saturate) {
+        return this;
+    }
+
+    @Override
     public BlurViewFacade setBlurRadius(float radius) {
         return this;
     }

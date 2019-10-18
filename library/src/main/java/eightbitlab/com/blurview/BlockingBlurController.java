@@ -36,6 +36,7 @@ final class BlockingBlurController implements BlurController {
 
     private final float scaleFactor = DEFAULT_SCALE_FACTOR;
     private float blurRadius = DEFAULT_BLUR_RADIUS;
+    private float saturation = 1;
     private float roundingWidthScaleFactor = 1f;
     private float roundingHeightScaleFactor = 1f;
 
@@ -237,7 +238,7 @@ final class BlockingBlurController implements BlurController {
     }
 
     private void blurAndSave() {
-        internalBitmap = blurAlgorithm.blur(internalBitmap, blurRadius);
+        internalBitmap = blurAlgorithm.blur(internalBitmap, blurRadius, saturation);
         if (!blurAlgorithm.canModifyBitmap()) {
             internalCanvas.setBitmap(internalBitmap);
         }
@@ -258,6 +259,12 @@ final class BlockingBlurController implements BlurController {
         if (internalBitmap != null) {
             internalBitmap.recycle();
         }
+    }
+
+    @Override
+    public BlurViewFacade setSaturation(float saturation) {
+        this.saturation = saturation;
+        return this;
     }
 
     @Override

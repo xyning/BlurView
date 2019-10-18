@@ -92,6 +92,10 @@ public class BlurView extends FrameLayout {
 
     // Setters duplicated to be able to conveniently change these settings outside of setupWith chain
 
+    public BlurViewFacade setSaturation(float saturation) {
+        return blurController.setSaturation(saturation);
+    }
+
     /**
      * @see BlurViewFacade#setBlurRadius(float)
      */

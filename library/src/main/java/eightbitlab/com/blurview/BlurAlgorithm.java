@@ -11,6 +11,8 @@ public interface BlurAlgorithm {
      */
     Bitmap blur(Bitmap bitmap, float blurRadius);
 
+    Bitmap blur(Bitmap bitmap, float blurRadius, float saturate);
+
     /**
      * Frees allocated resources
      */

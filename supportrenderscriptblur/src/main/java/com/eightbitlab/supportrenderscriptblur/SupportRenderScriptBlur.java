@@ -5,8 +5,10 @@ import android.graphics.Bitmap;
 import android.support.annotation.NonNull;
 import android.support.v8.renderscript.Allocation;
 import android.support.v8.renderscript.Element;
+import android.support.v8.renderscript.Matrix3f;
 import android.support.v8.renderscript.RenderScript;
 import android.support.v8.renderscript.ScriptIntrinsicBlur;
+import android.support.v8.renderscript.ScriptIntrinsicColorMatrix;
 
 import eightbitlab.com.blurview.BlurAlgorithm;
 
@@ -17,6 +19,7 @@ import eightbitlab.com.blurview.BlurAlgorithm;
 public final class SupportRenderScriptBlur implements BlurAlgorithm {
     private final RenderScript renderScript;
     private final ScriptIntrinsicBlur blurScript;
+    private final ScriptIntrinsicColorMatrix colorScript;
     private Allocation outAllocation;
 
     private int lastBitmapWidth = -1;
@@ -28,10 +31,15 @@ public final class SupportRenderScriptBlur implements BlurAlgorithm {
     public SupportRenderScriptBlur(Context context) {
         renderScript = RenderScript.create(context);
         blurScript = ScriptIntrinsicBlur.create(renderScript, Element.U8_4(renderScript));
+        colorScript = ScriptIntrinsicColorMatrix.create(renderScript, Element.U8_4(renderScript));
     }
 
     private boolean canReuseAllocation(Bitmap bitmap) {
         return bitmap.getHeight() == lastBitmapHeight && bitmap.getWidth() == lastBitmapWidth;
+    }
+
+    public final Bitmap blur(Bitmap bitmap, float blurRadius) {
+        return blur(bitmap, blurRadius, 1);
     }
 
     /**
@@ -40,7 +48,7 @@ public final class SupportRenderScriptBlur implements BlurAlgorithm {
      * @return blurred bitmap
      */
     @Override
-    public final Bitmap blur(Bitmap bitmap, float blurRadius) {
+    public final Bitmap blur(Bitmap bitmap, float blurRadius, float saturate) {
         //Allocation will use the same backing array of pixels as bitmap if created with USAGE_SHARED flag
         Allocation inAllocation = Allocation.createFromBitmap(renderScript, bitmap);
 
@@ -56,7 +64,20 @@ public final class SupportRenderScriptBlur implements BlurAlgorithm {
         blurScript.setRadius(blurRadius);
         blurScript.setInput(inAllocation);
         //do not use inAllocation in forEach. it will cause visual artifacts on blurred Bitmap
-        blurScript.forEach(outAllocation);
+        Allocation tmpAllocation = Allocation.createTyped(renderScript, inAllocation.getType());
+        blurScript.forEach(tmpAllocation);
+
+        final float invSat = 1 - saturate;
+        final float R = 0.213f * invSat;
+        final float G = 0.715f * invSat;
+        final float B = 0.072f * invSat;
+        Matrix3f m = new Matrix3f(new float[]{
+                R + saturate, R, R,
+                G, G + saturate, G,
+                B, B, B + saturate
+        });
+        colorScript.setColorMatrix(m);
+        colorScript.forEach(tmpAllocation, outAllocation);
         outAllocation.copyTo(bitmap);
 
         inAllocation.destroy();
