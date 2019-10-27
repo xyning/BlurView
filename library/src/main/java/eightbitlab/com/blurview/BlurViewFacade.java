@@ -43,6 +43,8 @@ public interface BlurViewFacade {
 
     BlurViewFacade setSaturation(float saturation);
 
+    BlurViewFacade setContrast(float contrast);
+
     /**
      * @param radius sets the blur radius
      *               Default value is {@link BlurController#DEFAULT_BLUR_RADIUS}

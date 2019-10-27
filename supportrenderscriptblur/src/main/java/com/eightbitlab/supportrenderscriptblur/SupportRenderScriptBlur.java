@@ -38,17 +38,13 @@ public final class SupportRenderScriptBlur implements BlurAlgorithm {
         return bitmap.getHeight() == lastBitmapHeight && bitmap.getWidth() == lastBitmapWidth;
     }
 
-    public final Bitmap blur(Bitmap bitmap, float blurRadius) {
-        return blur(bitmap, blurRadius, 1);
-    }
-
     /**
      * @param bitmap     bitmap to blur
      * @param blurRadius blur radius (1..25)
      * @return blurred bitmap
      */
     @Override
-    public final Bitmap blur(Bitmap bitmap, float blurRadius, float saturate) {
+    public final Bitmap blur(Bitmap bitmap, float blurRadius, float saturate, float contrast) {
         //Allocation will use the same backing array of pixels as bitmap if created with USAGE_SHARED flag
         Allocation inAllocation = Allocation.createFromBitmap(renderScript, bitmap);
 
@@ -72,11 +68,12 @@ public final class SupportRenderScriptBlur implements BlurAlgorithm {
         final float G = 0.715f * invSat;
         final float B = 0.072f * invSat;
         Matrix3f m = new Matrix3f(new float[]{
-                R + saturate, R, R,
-                G, G + saturate, G,
-                B, B, B + saturate
+                contrast * (R + saturate), R, R,
+                G, contrast * (G + saturate), G,
+                B, B, contrast * (B + saturate),
         });
         colorScript.setColorMatrix(m);
+        colorScript.setAdd((1f - contrast) / 2f, (1f - contrast) / 2f, (1f - contrast) / 2f, 0);
         colorScript.forEach(tmpAllocation, outAllocation);
         outAllocation.copyTo(bitmap);
 
